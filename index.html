@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+
+<style>
+body { background: #0699FF; }
+#game { margin: 2em auto; max-width: 960px; }
+#game canvas { margin: auto; display: block; }
+</style>
+
+</head>
+<body>
+
+<div id="game">
+
+</div>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" ></script>
+<script src="./keypress-1.0.3.js"></script>
+<script src="./tetris.js"></script>
+<script>
+(function(){
+keypress.sequence_combo("up up down down left right left right b a enter", function() {
+  tetris.run();
+}, true);
+})();
+</script>
+</body>
+</html>

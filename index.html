@@ -3,9 +3,10 @@
 <head>
 
 <style>
-body { background: #0699FF; }
+body { background: #00D0C6; }
 #game { margin: 2em auto; max-width: 960px; }
-#game canvas { margin: auto; display: block; }
+#game > div,
+#game canvas { margin: auto; display: block !important;} 
 </style>
 
 </head>
@@ -17,8 +18,10 @@ body { background: #0699FF; }
 
 
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" ></script>
+<script src="./kinetic-v4.4.0.min.js"></script>
 <script src="./keypress-1.0.3.js"></script>
 <script src="./tetris.js"></script>
+
 <script>
 (function(){
 keypress.sequence_combo("up up down down left right left right b a enter", function() {

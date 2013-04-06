@@ -1,6 +1,9 @@
 (function($){
 
   var tetris = tetris || {};
+  var game = {};
+
+  var stage, layer, currentBlock;
 
 
   // Init canvas, add to page
@@ -10,13 +13,22 @@
 
     console.log("Initializing");
 
-    var canvas = document.createElement("canvas");
-    var ctx = canvas.getContext("2d");
+    stage = new Kinetic.Stage({
+      container: 'game',
+      width: 600,
+      height: 480
+    });
+    console.log(stage);
 
-    canvas.width = 600;
-    canvas.height = 480;
+    layer = new Kinetic.Layer();
+    stage.add(layer);
+    console.log(layer);
 
-    document.getElementById("game").appendChild(canvas);
+    game.data = {};
+    game.data.score  = 0;
+    game.data.speed  = 1;
+    game.data.width  = stage.attrs.width;
+    game.data.height = stage.attrs.height;
 
     var combos = [
       {
@@ -59,8 +71,73 @@
 
     console.log("Running Tetris");
 
+    currentBlock = tetris.createBlock();
+    layer.add(currentBlock);
+    layer.draw();
+
+
   }
 
+  // Spawn a block set it as main piece
+  tetris.createBlock = function() {
+
+
+    /* make random block
+    
+    [
+      [
+        [ 1, 1, 1, 1 ],
+        [ 0, 0, 0, 0 ]
+      ],
+
+      [
+        [ 1, 1, 1, 0 ],
+        [ 0, 0, 1, 0 ]
+      ],
+
+      [
+        [ 1, 1, 1, 0 ],
+        [ 1, 0, 0, 0 ]
+      ],
+
+      [
+        [ 1, 1, 1, 0 ],
+        [ 0, 1, 0, 0 ]
+      ],
+
+      [
+        [ 1, 1, 0, 0 ],
+        [ 0, 1, 1, 0 ]
+      ],
+
+      [
+        [ 0, 1, 1, 0 ],
+        [ 1, 1, 0, 0 ]
+      ],
+
+      [
+        [ 1, 1, 0, 0 ],
+        [ 1, 1, 0, 0 ]
+      ]
+
+    ]
+
+    */
+
+    block = new Kinetic.Rect({
+      x: game.data.width/2,
+      y: 0,
+      width: 19,
+      height: 19,
+      fill: '#00A299',
+      stroke: '#00D0C6',
+      strokeWidth: 1,
+      opacity: 1
+    });
+    return block;
+    
+
+  }
 
 
   // Input Control logic
@@ -84,6 +161,11 @@
   tetris.moveRight = function() {
 
     console.log("Right fired");
+    currentBlock.transitionTo({
+      x: 400,
+      y: 30,
+      duration: .1
+    });
 
   }
 

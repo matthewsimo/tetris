@@ -75,16 +75,13 @@
     layer.add(currentBlock);
     layer.draw();
 
-
   }
 
   // Spawn a block set it as main piece
   tetris.createBlock = function() {
 
-
-    /* make random block
-    
-    [
+    // Blue prints for all the block options
+    blueprints = [
       [
         [ 1, 1, 1, 1 ],
         [ 0, 0, 0, 0 ]
@@ -120,9 +117,7 @@
         [ 1, 1, 0, 0 ]
       ]
 
-    ]
-
-    */
+    ];
 
     block = new Kinetic.Rect({
       x: game.data.width/2,
@@ -147,6 +142,11 @@
   tetris.moveLeft = function() {
 
     console.log("Left fired");
+    currentBlock.transitionTo({
+      x: currentBlock.attrs.x - 19,
+      y: currentBlock.attrs.y,
+      duration: .07
+    });
 
   }
 
@@ -154,6 +154,12 @@
   tetris.moveDown = function() {
 
     console.log("Down fired");
+    currentBlock.transitionTo({
+      x: currentBlock.attrs.x,
+      y: currentBlock.attrs.y + 19,
+      duration: .07
+    });
+
 
   }
 
@@ -162,9 +168,9 @@
 
     console.log("Right fired");
     currentBlock.transitionTo({
-      x: 400,
-      y: 30,
-      duration: .1
+      x: currentBlock.attrs.x + 19,
+      y: currentBlock.attrs.y,
+      duration: .07
     });
 
   }

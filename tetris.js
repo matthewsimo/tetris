@@ -119,17 +119,42 @@
 
     ];
 
-    block = new Kinetic.Rect({
+    blueprint = blueprints[Math.floor(Math.random()*blueprints.length)];
+
+
+    var blockPiece = new Kinetic.Group({
       x: game.data.width/2,
       y: 0,
-      width: 19,
-      height: 19,
-      fill: '#00A299',
-      stroke: '#00D0C6',
-      strokeWidth: 1,
-      opacity: 1
     });
-    return block;
+
+    // for each 'row'
+    blueprint.forEach(function(rowValue, rowIndex, blueprint){
+
+      // for each 'pixel' in each 'row'
+      rowValue.forEach(function(pixelValue, pixelIndex, row){
+
+        if(pixelValue){
+
+          pixel = new Kinetic.Rect({
+            x: pixelIndex * 19,
+            y: rowIndex * 19,
+            width: 19,
+            height: 19,
+            fill: '#00A299',
+            stroke: '#00D0C6',
+            strokeWidth: 1,
+            opacity: 1
+          });
+
+          blockPiece.add(pixel);
+
+        }
+
+      });
+
+    });
+
+    return blockPiece;
     
 
   }

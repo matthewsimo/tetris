@@ -38,40 +38,28 @@
         "keys"          : "a",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!isMoveHappening) {
-            isMoveHappening = true;
-            tetris.moveBlock(-19,0);
-          }
+          tetris.moveBlock(-19,0);
         }
       },
       {
         "keys"          : "s",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!isMoveHappening) {
-            isMoveHappening = true;
-            tetris.moveBlock(0,19);
-          }
+          tetris.moveBlock(0,19);
         }
       },
       {
         "keys"          : "d",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!isMoveHappening) {
-            isMoveHappening = true;
-            tetris.moveBlock(19,0);
-          }
+          tetris.moveBlock(19,0);
         }
       },
       {
         "keys"          : "space",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!isMoveHappening) {
-            isMoveHappening = true;
-            tetris.rotateBlock();
-          }
+          tetris.rotateBlock();
         }
       },
       {
@@ -120,9 +108,9 @@
     console.log("update currentBlock position");
     var currentR = currentBlock.getRotationDeg();
     if(tetris.testForValidMove(0, 19, currentR)) {
-      tetris.moveBlock(0,19);
+      tetris.moveBlock(0,19,true);
     } else {
-      tetris.newBlock();
+      tetris.killBlock();
     }
   }
 
@@ -151,17 +139,22 @@
 
 
   // Sets currentBlock as part of oldBlocks, spawns new block
-  tetris.newBlock = function() {
+  tetris.killBlock = function() {
 
     // If we haven't made the deadBlocks group, init it
     if(!deadBlocks){
       deadBlocks = new Kinetic.Group();
       layer.add(deadBlocks);
+      deadBlocks.moveToTop();
       layer.draw();
     }
 
     // Make currentBlock part of the deadBlocks
     deadBlocks.add(currentBlock);
+    layer.draw();
+    
+    // Check for Complete Lines
+    tetris.checkLines();
 
     // Make a new currentBlock
     tetris.createBlock();
@@ -219,11 +212,7 @@
 
     var blockPiece = new Kinetic.Group({
       x: game.data.width/2,
-      y: 19,
-//      offset: {
-//        x: 19,
-//        y: 19
-//      }
+      y: 19
     });
 
     var blockWidth = 0;
@@ -262,17 +251,6 @@
     });
 
 
-    // test point - remove later
-    blockPiece.add( new Kinetic.Circle({
-
-      x:0,
-      y:0,
-      radius: 1,
-      fill: 'red',
-      stroke: 'red',
-      strokeWidth: 1
-
-    }));
     blockPiece.setSize(blockWidth, blockHeight);
 
     currentBlock = blockPiece;
@@ -280,6 +258,13 @@
     layer.draw();
 
     return;
+
+  }
+
+
+  tetris.checkLines = function() {
+
+    console.log("checking for completed lines");
 
   }
 
@@ -362,25 +347,24 @@
   //
 
   // Move Block
-  tetris.moveBlock = function(xD,yD) {
+  tetris.moveBlock = function(xD,yD, force) {
 
+    force ? force : false;
     var currentR = currentBlock.getRotationDeg();
-    console.log("moveBlock fired");
-    if(tetris.testForValidMove(xD, yD, currentR)) {
-      currentBlock.transitionTo({
-        x: currentBlock.attrs.x + xD,
-        y: currentBlock.attrs.y + yD,
-        duration: .05
-      });
+
+    if(force) 
+      currentBlock.setPosition( currentBlock.attrs.x + xD, currentBlock.attrs.y + yD );
+    else if(tetris.testForValidMove(xD, yD, currentR)) {
+      currentBlock.setPosition( currentBlock.attrs.x + xD, currentBlock.attrs.y + yD );
     }
 
-    isMoveHappening = false;
+    layer.draw();
+
     return;
   }
 
   // Rotate Block
   tetris.rotateBlock = function() {
-    console.log("Space fired");
     var currentR = currentBlock.getRotationDeg();
     var targetR = 0;
 
@@ -395,7 +379,6 @@
       layer.draw();
     }
 
-    isMoveHappening = false;
     return;
   }
 
@@ -403,7 +386,7 @@
   tetris.resolveRotate = function(xD, yD, degree) {
       currentBlock.setRotationDeg(degree);
       currentBlock.setPosition(currentBlock.attrs.x + xD, currentBlock.attrs.y + yD);
-      currentBlock.draw();
+      layer.draw();
   }
 
   tetris.initHUD = function() {
@@ -472,7 +455,9 @@
   }
 
   tetris.util = function() {
+    deadBlocks.moveToTop();
     console.log(deadBlocks);
+    console.log(currentBlock);
   }
 
   window.tetris = tetris;

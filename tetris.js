@@ -215,42 +215,30 @@
     var yDest = yPos + yMove;
     var currWidth, currHeight;
 
-    console.log("xPos: " + xPos);
-    console.log("yPos: " + yPos);
-    console.log("xMove: " + xMove);
-    console.log("yMove: " + yMove);
 
 
     var rotation = currentBlock.getRotationDeg();
 
     switch (rotation) {
       case 0:
-        console.log("rotation 0");
-        console.log("current width: " + (blockSize.width/19) + " : current height: " + (blockSize.height/19));
         currWidth = blockSize.width;
         currHeight = blockSize.height;
         if( xDest < LeftBounds || ( xDest + currWidth ) > RightBounds || ( yDest + currHeight) > BottomBounds )
           return true;
         break;
       case 90:
-        console.log("rotation 90");
-        console.log("current width: -" + (blockSize.height/19) + " : current height: " + (blockSize.width/19));
         currWidth = -blockSize.height;
         currHeight = blockSize.width;
         if( ( xDest + currWidth ) < LeftBounds || xDest > RightBounds || ( yDest + currHeight ) > BottomBounds )
           return true;
         break;
       case 180:
-        console.log("rotation 180");
-        console.log("current width: -" + (blockSize.width/19) + " : current height: -" + (blockSize.height/19));
         currWidth = -blockSize.width;
         currHeight = blockSize.height;
         if( ( xDest + currWidth ) < LeftBounds || xDest > RightBounds || yDest > BottomBounds )
           return true;
         break;
       case 270:
-        console.log("rotation 270");
-        console.log("current width: " + (blockSize.height/19) + " : current height: -" + (blockSize.width/19));
         currWidth = blockSize.height;
         currHeight = -blockSize.width;
         if( xDest < LeftBounds || ( xDest + currWidth ) > RightBounds || yDest > BottomBounds )

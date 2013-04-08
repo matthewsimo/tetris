@@ -258,16 +258,29 @@
 
 
     if(isValidMove) {
-      console.log("We have a valid move, exit with truth");
       return true;
     } else if( !isValidMove && !xMove && !yMove ){
-      if((xDest + currWidth) <= LeftBounds) { // Breaking left bounds
-        tetris.resolveRotate( -((xDest + currWidth) - LeftBounds), 0, degree );
-      } else if((xDest + currWidth) >= RightBounds) { // Breaking right bounds
-        tetris.resolveRotate( -((xDest + currWidth) - RightBounds), 0, degree );
+      xFix = 0;
+      yFix = 0;
+
+      // Breaking left bounds?
+      if((xDest + currWidth) <= LeftBounds) { 
+        xFix = -((xDest + currWidth) - LeftBounds);
       }
+
+      // Breaking right bounds?
+      if((xDest + currWidth) >= RightBounds) { 
+        xFix = -((xDest + currWidth) - RightBounds);
+      }
+
+      // Breaking bottom bounds?
+      if((yDest + currHeight) >= BottomBounds) { 
+        yFix = -((yDest + currHeight) - BottomBounds);
+      }
+
+      tetris.resolveRotate( xFix, yFix, degree);
+      return true;
     } else {
-      console.log("Not a valid move, and not a rotation, exit with falsity");
       return false;
     }
 

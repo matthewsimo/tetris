@@ -29,6 +29,7 @@
     game.data = {};
     game.data.score  = 0;
     game.data.speed  = 1;
+    game.data.pause = false;
     game.data.width  = stage.attrs.width;
     game.data.height = stage.attrs.height;
 
@@ -71,6 +72,13 @@
             isMoveHappening = true;
             tetris.rotateBlock();
           }
+        }
+      },
+      {
+        "keys"          : "enter",
+        "is_exclusive"  : true,
+        "on_keydown"    : function() {
+          tetris.pauseGame();
         }
       }
     ];
@@ -380,6 +388,18 @@
     
 
   }
+
+  tetris.pauseGame = function(){
+  
+    if(game.data.pause)
+      game.data.pause = false;
+    else 
+      game.data.pause = true;
+
+    console.log("pause game " + game.data.pause);
+
+  }
+
 
   window.tetris = tetris;
 

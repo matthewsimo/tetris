@@ -2,6 +2,7 @@
 
   var tetris = tetris || {};
   var game = {};
+  var isMoveHappening = false;
 
   var stage, layer, currentBlock, layerHUD;
 
@@ -36,28 +37,40 @@
         "keys"          : "a",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.moveBlock(-19,0);
+          if(!isMoveHappening) {
+            isMoveHappening = true;
+            tetris.moveBlock(-19,0);
+          }
         }
       },
       {
         "keys"          : "s",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.moveBlock(0,19);
+          if(!isMoveHappening) {
+            isMoveHappening = true;
+            tetris.moveBlock(0,19);
+          }
         }
       },
       {
         "keys"          : "d",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.moveBlock(19,0);
+          if(!isMoveHappening) {
+            isMoveHappening = true;
+            tetris.moveBlock(19,0);
+          }
         }
       },
       {
         "keys"          : "space",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.rotateBlock();
+          if(!isMoveHappening) {
+            isMoveHappening = true;
+            tetris.rotateBlock();
+          }
         }
       }
     ];
@@ -201,12 +214,13 @@
 
 
   // Remedial Collision detection - returns BOOL
-  tetris.testForHit = function(xMove, yMove){
+  tetris.testForValidMove = function(xMove, yMove, degree){
 
     
     var LeftBounds = 205;
     var RightBounds = 395;
     var BottomBounds = 437;
+    var isValidMove = false;
 
     var blockSize = currentBlock.getSize();
     var xPos  = currentBlock.attrs.x;
@@ -216,37 +230,46 @@
     var currWidth, currHeight;
 
 
-
-    var rotation = currentBlock.getRotationDeg();
-
+    // Calculate current width/height based on rotation
+    var rotation = degree;
     switch (rotation) {
       case 0:
         currWidth = blockSize.width;
         currHeight = blockSize.height;
-        if( xDest < LeftBounds || ( xDest + currWidth ) > RightBounds || ( yDest + currHeight) > BottomBounds )
-          return true;
+        if( xDest >= LeftBounds && ( xDest + currWidth ) <= RightBounds && ( yDest + currHeight) <= BottomBounds ) isValidMove = true;
         break;
       case 90:
         currWidth = -blockSize.height;
         currHeight = blockSize.width;
-        if( ( xDest + currWidth ) < LeftBounds || xDest > RightBounds || ( yDest + currHeight ) > BottomBounds )
-          return true;
+        if( ( xDest + currWidth ) >= LeftBounds && xDest <= RightBounds && ( yDest + currHeight ) <= BottomBounds ) isValidMove = true;
         break;
       case 180:
         currWidth = -blockSize.width;
         currHeight = blockSize.height;
-        if( ( xDest + currWidth ) < LeftBounds || xDest > RightBounds || yDest > BottomBounds )
-          return true;
+        if( ( xDest + currWidth ) >= LeftBounds && xDest <= RightBounds && yDest <= BottomBounds ) isValidMove = true;
         break;
       case 270:
         currWidth = blockSize.height;
         currHeight = -blockSize.width;
-        if( xDest < LeftBounds || ( xDest + currWidth ) > RightBounds || yDest > BottomBounds )
-          return true;
+        if( xDest >= LeftBounds && ( xDest + currWidth ) <= RightBounds && yDest <= BottomBounds ) isValidMove = true;
         break;
     }
 
-    return false;
+
+
+    if(isValidMove) {
+      console.log("We have a valid move, exit with truth");
+      return true;
+    } else if( !isValidMove && !xMove && !yMove ){
+      if((xDest + currWidth) <= LeftBounds) { // Breaking left bounds
+        tetris.resolveRotate( -((xDest + currWidth) - LeftBounds), 0, degree );
+      } else if((xDest + currWidth) >= RightBounds) { // Breaking right bounds
+        tetris.resolveRotate( -((xDest + currWidth) - RightBounds), 0, degree );
+      }
+    } else {
+      console.log("Not a valid move, and not a rotation, exit with falsity");
+      return false;
+    }
 
   }
 
@@ -257,8 +280,9 @@
   // Move Block
   tetris.moveBlock = function(xD,yD) {
 
+    var currentR = currentBlock.getRotationDeg();
     console.log("moveBlock fired");
-    if(!tetris.testForHit(xD,yD)) {
+    if(tetris.testForValidMove(xD, yD, currentR)) {
       currentBlock.transitionTo({
         x: currentBlock.attrs.x + xD,
         y: currentBlock.attrs.y + yD,
@@ -266,23 +290,37 @@
       });
     }
 
+    isMoveHappening = false;
+    return;
   }
 
   // Rotate Block
   tetris.rotateBlock = function() {
     console.log("Space fired");
-
-    currentR = currentBlock.getRotationDeg();
+    var currentR = currentBlock.getRotationDeg();
+    var targetR = 0;
 
     if( currentR === 0 || currentR === 90 || currentR === 180 )
-      currentBlock.setRotationDeg(currentR + 90);
+      targetR = currentR + 90;
     else if ( currentR === 270 )
-      currentBlock.setRotationDeg(0);
-    
-    layer.draw();
+      targetR = 0;
+
+    currentR = currentBlock.getRotationDeg();
+    if(tetris.testForValidMove(0, 0, targetR)){
+      currentBlock.setRotationDeg(targetR);
+      layer.draw();
+    }
+
+    isMoveHappening = false;
     return;
   }
 
+  // Resolve Rotates that break bounds
+  tetris.resolveRotate = function(xD, yD, degree) {
+      currentBlock.setRotationDeg(degree);
+      currentBlock.setPosition(currentBlock.attrs.x + xD, currentBlock.attrs.y + yD);
+      currentBlock.draw();
+  }
 
   tetris.initHUD = function() {
 

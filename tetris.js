@@ -36,28 +36,28 @@
         "keys"          : "a",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.moveLeft();
+          tetris.moveBlock(-19,0);
         }
       },
       {
         "keys"          : "s",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.moveDown();
+          tetris.moveBlock(0,19);
         }
       },
       {
         "keys"          : "d",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.moveRight();
+          tetris.moveBlock(19,0);
         }
       },
       {
         "keys"          : "space",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.moveRotate();
+          tetris.rotateBlock();
         }
       }
     ];
@@ -135,12 +135,15 @@
 
     var blockPiece = new Kinetic.Group({
       x: game.data.width/2,
-      y: 0,
-      offset: {
-        x: 19,
-        y: 19
-      }
+      y: 19,
+//      offset: {
+//        x: 19,
+//        y: 19
+//      }
     });
+
+    var blockWidth = 0;
+    var blockHeight = 0;
 
     // for each 'row'
     blueprint.forEach(function(rowValue, rowIndex, blueprint){
@@ -162,6 +165,11 @@
           });
 
           blockPiece.add(pixel);
+          if(blockWidth < 19 + (pixelIndex * 19))
+            blockWidth = 19 + (pixelIndex * 19);
+          if (blockHeight < 19 + (rowIndex * 19))
+            blockHeight = 19 + (rowIndex * 19);
+
 
         }
 
@@ -169,6 +177,19 @@
 
     });
 
+
+    // test point - remove later
+    blockPiece.add( new Kinetic.Circle({
+
+      x:0,
+      y:0,
+      radius: 1,
+      fill: 'red',
+      stroke: 'red',
+      strokeWidth: 1
+
+    }));
+    blockPiece.setSize(blockWidth, blockHeight);
 
     currentBlock = blockPiece;
     layer.add(currentBlock);
@@ -179,51 +200,99 @@
   }
 
 
+  // Remedial Collision detection - returns BOOL
+  tetris.testForHit = function(xMove, yMove){
+
+    
+    var LeftBounds = 205;
+    var RightBounds = 395;
+    var BottomBounds = 437;
+
+    var blockSize = currentBlock.getSize();
+    var xPos  = currentBlock.attrs.x;
+    var yPos  = currentBlock.attrs.y;
+    var xDest = xPos + xMove;
+    var yDest = yPos + yMove;
+    var currWidth, currHeight;
+
+    console.log("xPos: " + xPos);
+    console.log("yPos: " + yPos);
+    console.log("xMove: " + xMove);
+    console.log("yMove: " + yMove);
+
+
+    var rotation = currentBlock.getRotationDeg();
+
+    switch (rotation) {
+      case 0:
+        console.log("rotation 0");
+        console.log("current width: " + (blockSize.width/19) + " : current height: " + (blockSize.height/19));
+        currWidth = blockSize.width;
+        currHeight = blockSize.height;
+        if( xDest < LeftBounds || ( xDest + currWidth ) > RightBounds || ( yDest + currHeight) > BottomBounds )
+          return true;
+        break;
+      case 90:
+        console.log("rotation 90");
+        console.log("current width: -" + (blockSize.height/19) + " : current height: " + (blockSize.width/19));
+        currWidth = -blockSize.height;
+        currHeight = blockSize.width;
+        if( ( xDest + currWidth ) < LeftBounds || xDest > RightBounds || ( yDest + currHeight ) > BottomBounds )
+          return true;
+        break;
+      case 180:
+        console.log("rotation 180");
+        console.log("current width: -" + (blockSize.width/19) + " : current height: -" + (blockSize.height/19));
+        currWidth = -blockSize.width;
+        currHeight = blockSize.height;
+        if( ( xDest + currWidth ) < LeftBounds || xDest > RightBounds || yDest > BottomBounds )
+          return true;
+        break;
+      case 270:
+        console.log("rotation 270");
+        console.log("current width: " + (blockSize.height/19) + " : current height: -" + (blockSize.width/19));
+        currWidth = blockSize.height;
+        currHeight = -blockSize.width;
+        if( xDest < LeftBounds || ( xDest + currWidth ) > RightBounds || yDest > BottomBounds )
+          return true;
+        break;
+    }
+
+    return false;
+
+  }
+
+
   // Input Control logic
   //
 
-  // Move left
-  tetris.moveLeft = function() {
+  // Move Block
+  tetris.moveBlock = function(xD,yD) {
 
-    console.log("Left fired");
-    currentBlock.transitionTo({
-      x: currentBlock.attrs.x - 19,
-      y: currentBlock.attrs.y,
-      duration: .05
-    });
-
-  }
-
-  // Move down
-  tetris.moveDown = function() {
-
-    console.log("Down fired");
-    currentBlock.transitionTo({
-      x: currentBlock.attrs.x,
-      y: currentBlock.attrs.y + 19,
-      duration: .05
-    });
-
+    console.log("moveBlock fired");
+    if(!tetris.testForHit(xD,yD)) {
+      currentBlock.transitionTo({
+        x: currentBlock.attrs.x + xD,
+        y: currentBlock.attrs.y + yD,
+        duration: .05
+      });
+    }
 
   }
 
-  // Move right
-  tetris.moveRight = function() {
-
-    console.log("Right fired");
-    currentBlock.transitionTo({
-      x: currentBlock.attrs.x + 19,
-      y: currentBlock.attrs.y,
-      duration: .05
-    });
-
-  }
-
-  // Move rotate
-  tetris.moveRotate = function() {
+  // Rotate Block
+  tetris.rotateBlock = function() {
     console.log("Space fired");
-    currentBlock.rotateDeg(90);
+
+    currentR = currentBlock.getRotationDeg();
+
+    if( currentR === 0 || currentR === 90 || currentR === 180 )
+      currentBlock.setRotationDeg(currentR + 90);
+    else if ( currentR === 270 )
+      currentBlock.setRotationDeg(0);
+    
     layer.draw();
+    return;
   }
 
 

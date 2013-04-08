@@ -3,7 +3,7 @@
   var tetris = tetris || {};
   var game = {};
 
-  var stage, layer, currentBlock;
+  var stage, layer, currentBlock, layerHUD;
 
 
   // Init canvas, add to page
@@ -18,11 +18,12 @@
       width: 600,
       height: 480
     });
-    console.log(stage);
 
     layer = new Kinetic.Layer();
     stage.add(layer);
-    console.log(layer);
+
+
+    tetris.initHUD();
 
     game.data = {};
     game.data.score  = 0;
@@ -71,11 +72,21 @@
 
     console.log("Running Tetris");
 
-    currentBlock = tetris.createBlock();
-    layer.add(currentBlock);
-    layer.draw();
+    tetris.createBlock();
 
   }
+
+
+  tetris.reset = function() {
+    
+    console.log("Resetting Game");
+
+    layer.removeChildren();
+    layer.draw();
+    tetris.setScore(0);
+
+  }
+
 
   // Spawn a block set it as main piece
   tetris.createBlock = function() {
@@ -154,8 +165,12 @@
 
     });
 
-    return blockPiece;
-    
+
+    currentBlock = blockPiece;
+    layer.add(currentBlock);
+    layer.draw();
+
+    return;
 
   }
 
@@ -170,7 +185,7 @@
     currentBlock.transitionTo({
       x: currentBlock.attrs.x - 19,
       y: currentBlock.attrs.y,
-      duration: .07
+      duration: .05
     });
 
   }
@@ -182,7 +197,7 @@
     currentBlock.transitionTo({
       x: currentBlock.attrs.x,
       y: currentBlock.attrs.y + 19,
-      duration: .07
+      duration: .05
     });
 
 
@@ -195,7 +210,7 @@
     currentBlock.transitionTo({
       x: currentBlock.attrs.x + 19,
       y: currentBlock.attrs.y,
-      duration: .07
+      duration: .05
     });
 
   }
@@ -208,10 +223,52 @@
   }
 
 
+  tetris.initHUD = function() {
+
+    layerHUD = new Kinetic.Layer();
+    var container = new Kinetic.Line({
+      points: [ 200, 40, 200, 440, 400, 440, 400, 40 ],
+      stroke: '#00A299',
+      strokeWidth: 1
+    });
+
+    var scoreGroup = new Kinetic.Group({
+      x: 430,
+      y: 370
+    });
+    var scoreTitle = new Kinetic.Text({
+      x: 0,
+      y: 0,
+      text: 'Score:',
+      fontSize: 20,
+      fontFamily: "Helvetica",
+      fill: '#00A299'
+    });
+    var scoreText = new Kinetic.Text({
+      x: 0,
+      y: 30,
+      text: '0',
+      fontSize: 20,
+      fontFamily: "Helvetica",
+      fill: '#00A299'
+    });
+
+    scoreGroup.add(scoreTitle);
+    scoreGroup.add(scoreText);
+
+    layerHUD.add(scoreGroup);
+    layerHUD.add(container);
+    stage.add(layerHUD);
+
+  }
+
+
+  tetris.setScore = function(score) {
+
+    
+
+  }
+
   window.tetris = tetris;
 
 })(jQuery);
-
-
-
-

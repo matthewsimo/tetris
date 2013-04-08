@@ -136,6 +136,10 @@
     var blockPiece = new Kinetic.Group({
       x: game.data.width/2,
       y: 0,
+      offset: {
+        x: 19,
+        y: 19
+      }
     });
 
     // for each 'row'
@@ -217,9 +221,9 @@
 
   // Move rotate
   tetris.moveRotate = function() {
-
     console.log("Space fired");
-
+    currentBlock.rotateDeg(90);
+    layer.draw();
   }
 
 

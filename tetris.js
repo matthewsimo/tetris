@@ -4,7 +4,7 @@
   var game = {};
   var isMoveHappening = false;
 
-  var stage, layer, currentBlock, layerHUD;
+  var stage, layer, currentBlock, deadBlocks, layerHUD, scoreText, gameInterval, gameTimerThen, gameTimerNow;
 
 
   // Init canvas, add to page
@@ -28,7 +28,7 @@
 
     game.data = {};
     game.data.score  = 0;
-    game.data.speed  = 1;
+    game.data.speed  = 100;
     game.data.pause = false;
     game.data.width  = stage.attrs.width;
     game.data.height = stage.attrs.height;
@@ -93,8 +93,41 @@
 
     console.log("Running Tetris");
 
-    tetris.createBlock();
+    tetris.reset();
+    then = Date.now();
 
+
+  }
+
+
+  // Main Game Loop
+  tetris.gameLoop = function(){
+
+      now = Date.now();
+      var delta = now - then;
+
+      if( delta >= 1000 - game.data.speed){
+        tetris.update(delta);
+        then = now;
+      }
+
+
+  }
+
+
+  tetris.update = function(mod) {
+    console.log("tick fired");
+    console.log("update currentBlock position");
+    var currentR = currentBlock.getRotationDeg();
+    if(tetris.testForValidMove(0, 19, currentR)) {
+      tetris.moveBlock(0,19);
+    } else {
+      tetris.newBlock();
+    }
+  }
+
+  tetris.render = function() {
+    stage.draw();
   }
 
 
@@ -102,11 +135,41 @@
     
     console.log("Resetting Game");
 
+    if(gameInterval)
+      clearInterval(gameInterval);
+    game.data.speed  = 1;
+    game.data.pause = false;
     layer.removeChildren();
     layer.draw();
     tetris.setScore(0);
+    tetris.createBlock();
+
+    gameInterval = setInterval(tetris.gameLoop, 10); 
+    return;
 
   }
+
+
+  // Sets currentBlock as part of oldBlocks, spawns new block
+  tetris.newBlock = function() {
+
+    // If we haven't made the deadBlocks group, init it
+    if(!deadBlocks){
+      deadBlocks = new Kinetic.Group();
+      layer.add(deadBlocks);
+      layer.draw();
+    }
+
+    // Make currentBlock part of the deadBlocks
+    deadBlocks.add(currentBlock);
+
+    // Make a new currentBlock
+    tetris.createBlock();
+
+    return;
+    
+  }
+
 
 
   // Spawn a block set it as main piece
@@ -364,7 +427,7 @@
       fontFamily: "Helvetica",
       fill: '#00A299'
     });
-    var scoreText = new Kinetic.Text({
+    scoreText = new Kinetic.Text({
       x: 0,
       y: 30,
       text: '0',
@@ -385,21 +448,32 @@
 
   tetris.setScore = function(score) {
 
+    game.data.score = score;
+    scoreText.setText(score);
+    layerHUD.draw();
     
 
   }
 
   tetris.pauseGame = function(){
   
-    if(game.data.pause)
+    // Game is already paused, restart interval
+    if(game.data.pause) {
+      gameInterval = setInterval(tetris.gameLoop, 10);
       game.data.pause = false;
-    else 
+    }
+    else {
+      clearInterval(gameInterval);
       game.data.pause = true;
+    }
 
     console.log("pause game " + game.data.pause);
 
   }
 
+  tetris.util = function() {
+    console.log(deadBlocks);
+  }
 
   window.tetris = tetris;
 

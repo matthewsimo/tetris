@@ -38,28 +38,32 @@
         "keys"          : "a",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.moveBlock(-19,0);
+          if(!game.data.pause)
+            tetris.moveBlock(-19,0);
         }
       },
       {
         "keys"          : "s",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.moveBlock(0,19);
+          if(!game.data.pause)
+            tetris.moveBlock(0,19);
         }
       },
       {
         "keys"          : "d",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.moveBlock(19,0);
+          if(!game.data.pause)
+            tetris.moveBlock(19,0);
         }
       },
       {
         "keys"          : "space",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.rotateBlock();
+          if(!game.data.pause)
+            tetris.rotateBlock();
         }
       },
       {
@@ -110,6 +114,8 @@
     if(tetris.testForValidMove(0, 19, currentR)) {
       tetris.moveBlock(0,19, true);
     } else {
+      console.log("Killing Block");
+      console.log(currentBlock);
       tetris.killBlock();
       tetris.checkForGameOver();
     }
@@ -132,8 +138,10 @@
         align: 'center'
         
       });
+
       layer.add(gameOverText);
       gameOverText.moveToTop();
+      gameOverText.draw();
       layer.draw();
     }
 
@@ -490,17 +498,33 @@
     if(!deadBlocksObj)
       return didCollide;
 
+    pixelR = currentBlock.getRotationDeg();
+
+    
+    console.log("----");
+    console.log("----");
+    console.log("Current Block Loc: x: " + currentBlock.getX() + " y: " + currentBlock.getY());
+    console.log("Move By: x: " + xMove + " y: " + yMove);
+    console.log("degree: " + degree);
+    console.log("current R: " + pixelR);
+
     pixels = currentBlock.getChildren();
     pixels.forEach(function(v,i,a){
 
       newCoords = {};
-      pixelR = currentBlock.getRotationDeg();
       correctBy = tetris.correctForRotation(pixelR);
       newCoords.x = v.getAbsolutePosition().x + correctBy.x + xMove;
       newCoords.y = v.getAbsolutePosition().y + correctBy.y + yMove;
 
+      console.log("----");
+      console.log("Current Loc:\tx: " + v.getAbsolutePosition().x + " y: " + v.getAbsolutePosition().y);
+      console.log("Correct Loc By:\tx: " + correctBy.x + " y: " + correctBy.y);
+      console.log("Corrected Loc:\tx: " + ( v.getAbsolutePosition().x + correctBy.x ) + " y: " + ( v.getAbsolutePosition().y + correctBy.y ) );
+      console.log("New Loc:\t\tx: " + newCoords.x + " y: " + newCoords.y);
+
       if(deadBlocksObj['' + newCoords.y ]) {
         if($.inArray(newCoords.x, deadBlocksObj['' + newCoords.y ])){
+          console.log("conflict at: x:" + newCoords.x + " y: " + newCoords.y);
           didCollide = true;
         } else {
           // didn't collide
@@ -509,6 +533,7 @@
       
 
     });
+    console.log("----");
     
     
     return didCollide;
@@ -631,7 +656,7 @@
   tetris.util = function() {
     console.log("deadBlocksObj:");
     console.log(deadBlocksObj);
-    console.log(deadBlocks);
+//    console.log(deadBlocks);
   }
 
   window.tetris = tetris;

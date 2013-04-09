@@ -116,6 +116,7 @@
     } else {
       console.log("Killing Block");
       console.log(currentBlock);
+      console.log(deadBlocksObj);
       tetris.killBlock();
       tetris.checkForGameOver();
     }
@@ -516,25 +517,20 @@
       newCoords.x = v.getAbsolutePosition().x + correctBy.x + xMove;
       newCoords.y = v.getAbsolutePosition().y + correctBy.y + yMove;
 
-      console.log("----");
-      console.log("Current Loc:\tx: " + v.getAbsolutePosition().x + " y: " + v.getAbsolutePosition().y);
-      console.log("Correct Loc By:\tx: " + correctBy.x + " y: " + correctBy.y);
-      console.log("Corrected Loc:\tx: " + ( v.getAbsolutePosition().x + correctBy.x ) + " y: " + ( v.getAbsolutePosition().y + correctBy.y ) );
-      console.log("New Loc:\t\tx: " + newCoords.x + " y: " + newCoords.y);
-
+      // Check if a row of pixels is even at the newCoords.y
       if(deadBlocksObj['' + newCoords.y ]) {
-        if($.inArray(newCoords.x, deadBlocksObj['' + newCoords.y ])){
-          console.log("conflict at: x:" + newCoords.x + " y: " + newCoords.y);
-          didCollide = true;
-        } else {
-          // didn't collide
-        }
+
+        deadBlocksObj['' + newCoords.y ].forEach(function(v,i,a){
+
+          if(parseInt(v) == parseInt(newCoords.x))
+            didCollide = true;
+
+        });
+
       }
       
 
     });
-    console.log("----");
-    
     
     return didCollide;
 
@@ -656,7 +652,7 @@
   tetris.util = function() {
     console.log("deadBlocksObj:");
     console.log(deadBlocksObj);
-//    console.log(deadBlocks);
+    console.log(currentBlock);
   }
 
   window.tetris = tetris;

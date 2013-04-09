@@ -4,7 +4,7 @@
   var game = {};
   var isMoveHappening = false;
 
-  var stage, layer, currentBlock, deadBlocks, layerHUD, scoreText, gameInterval, gameTimerThen, gameTimerNow;
+  var stage, layer, currentBlock, deadBlocks, deadBlocksObj, layerHUD, scoreText, gameInterval, gameTimerThen, gameTimerNow;
 
 
   // Init canvas, add to page
@@ -111,6 +111,7 @@
       tetris.moveBlock(0,19, true);
     } else {
       tetris.killBlock();
+      tetris.checkForGameOver();
     }
   }
 
@@ -118,6 +119,25 @@
     stage.draw();
   }
 
+  tetris.checkForGameOver = function() {
+
+    if(deadBlocksObj[38]){
+      console.log("game over sucker");
+      clearInterval(gameInterval);
+      gameOverText = new Kinetic.Text({
+        x: game.data.width/2,
+        y: game.data.width/2,
+        text: "GAME OVER\n[ESC] TO RESTART",
+        fontSize: 30,
+        align: 'center'
+        
+      });
+      layer.add(gameOverText);
+      gameOverText.moveToTop();
+      layer.draw();
+    }
+
+  }
 
   tetris.reset = function() {
     
@@ -142,6 +162,7 @@
 
     // If we haven't made the deadBlocks group, init it
     if(!deadBlocks){
+      deadBlocksObj = {};
       deadBlocks = new Kinetic.Group();
       layer.add(deadBlocks);
       deadBlocks.moveToTop();
@@ -259,13 +280,54 @@
 
   }
 
+  tetris.correctForRotation = function(rotation){
+
+      var cX = 0;
+      var cY = 0; 
+
+      // Corrent for rotation of parent
+      switch (rotation){
+        case 0:
+          cX = 0;
+          cY = 0;
+          break;
+        case 90:
+          cX = -19;
+          cY = 0;
+          break;
+        case 180:
+          cX = -19;
+          cY = -19;
+          break;
+        case 270:
+          cX = 0;
+          cY = -19;
+          break;
+      }
+      return {x: cX, y: cY};
+
+  }
+
+
   tetris.convertToDeadBlocks = function() {
+
 
     // Add pixels from currentBlock to deadBlocks group
     var pixels = currentBlock.getChildren();
     pixels.forEach(function(v, i, a){
 
-      deadBlocks.add(v.clone({ x: v.getAbsolutePosition().x , y: v.getAbsolutePosition().y, rotationDeg: currentBlock.getRotationDeg() }));
+      pixelR = currentBlock.getRotationDeg();
+      deadCoords = {};
+
+      correctBy = tetris.correctForRotation(pixelR);
+      deadCoords.x = v.getAbsolutePosition().x + correctBy.x;
+      deadCoords.y = v.getAbsolutePosition().y + correctBy.y;
+      deadBlocks.add(v.clone({ x: deadCoords.x , y: deadCoords.y }));
+
+      if(!deadBlocksObj['' + deadCoords.y])
+        deadBlocksObj['' + deadCoords.y] = [];
+
+      deadBlocksObj[''+ deadCoords.y].push(''+ deadCoords.x);
 
     });
 
@@ -273,11 +335,74 @@
 
   tetris.checkLines = function() {
 
-    console.log("checking for completed lines");
+    var completedLines = [];
+
+    if(!deadBlocksObj)
+      return false;
+    else {
+
+      // Break obj into it's rows, each row's key is it's y value
+      $.each(deadBlocksObj, function(i, v) {
+        if(v.length === 10) { // If a line has 10 items, it's whole, remove it
+          completedLines.push(i)
+          v = [];
+        }
+      });
+
+    }
+
+    if(completedLines.length !== 0){
+      // Process through each completed line and remove it
+      console.log("we have completed lines.");
+      completedLines.forEach(function(v){
+        tetris.removeLine(v);
+      });
+    }
+
+  }
+
+  tetris.removeLine = function(y){
+
     oldBlocks = deadBlocks.getChildren();
     oldBlocks.forEach(function(v,i,a){
 
+      if(v.getY() == y) { // We have a matching y, remove that sucker
+        v.destroy();
+      } else if ( v.getY() < y ) { // This block is above the line we're removing, move it down
+        v.setY(v.getY() + 19);
+      } 
+
     });
+
+    layer.draw();
+    tetris.setScore(game.data.score + 1);
+    console.log("in removing line:");
+    console.log(deadBlocksObj);
+    deadBlocksObj = tetris.calculateDeadBlocksObj();
+
+
+  }
+
+
+  tetris.calculateDeadBlocksObj = function() {
+
+    deadBlocksObj = {};
+    newDeadBlocksObj = {};
+
+    var oldBlocks = deadBlocks.getChildren();
+    oldBlocks.forEach(function(v, i, a){
+
+      deadCoords = {};
+      deadCoords.x = v.getAbsolutePosition().x;
+      deadCoords.y = v.getAbsolutePosition().y;
+
+      if(!deadBlocksObj['' + deadCoords.y])
+        deadBlocksObj['' + deadCoords.y] = [];
+
+      deadBlocksObj[''+ deadCoords.y].push(''+ deadCoords.x);
+    });
+    
+    return newDeadBlocksObj;
 
   }
 
@@ -327,8 +452,9 @@
 
 
     if(isValidMove) {
-//      console.log("check for collisions with deadblocks");
-      return true;
+
+      return !(tetris.checkForDeadBlockCollision(xMove, yMove, degree));
+
     } else if( !isValidMove && !xMove && !yMove ){
       xFix = 0;
       yFix = 0;
@@ -345,7 +471,6 @@
 
       // Breaking bottom bounds?
       if((yDest + currHeight) >= BottomBounds) { 
-        console.log("broke the bottom");
         yFix = -((yDest + currHeight) - BottomBounds);
       }
 
@@ -356,6 +481,40 @@
     }
 
   }
+
+  // Check for collisions with dead blocks, returns BOOL
+  tetris.checkForDeadBlockCollision = function(xMove, yMove, degree){
+
+    var didCollide = false;
+
+    if(!deadBlocksObj)
+      return didCollide;
+
+    pixels = currentBlock.getChildren();
+    pixels.forEach(function(v,i,a){
+
+      newCoords = {};
+      pixelR = currentBlock.getRotationDeg();
+      correctBy = tetris.correctForRotation(pixelR);
+      newCoords.x = v.getAbsolutePosition().x + correctBy.x + xMove;
+      newCoords.y = v.getAbsolutePosition().y + correctBy.y + yMove;
+
+      if(deadBlocksObj['' + newCoords.y ]) {
+        if($.inArray(newCoords.x, deadBlocksObj['' + newCoords.y ])){
+          didCollide = true;
+        } else {
+          // didn't collide
+        }
+      }
+      
+
+    });
+    
+    
+    return didCollide;
+
+  }
+
 
 
   // Input Control logic
@@ -470,14 +629,9 @@
   }
 
   tetris.util = function() {
-    oldBlocks = deadBlocks.getChildren();
-
-    oldBlocks.forEach(function(v,i,a){
-
-      console.log("old block position:");
-      console.log(v.getPosition());
-
-    });
+    console.log("deadBlocksObj:");
+    console.log(deadBlocksObj);
+    console.log(deadBlocks);
   }
 
   window.tetris = tetris;

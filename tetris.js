@@ -72,6 +72,8 @@
     ];
 
     keypress.register_many(combos);
+
+    tetris.reset();
     tetris.run();
   }
 
@@ -81,9 +83,8 @@
 
     console.log("Running Tetris");
 
-    tetris.reset();
     then = Date.now();
-
+    gameInterval = setInterval(tetris.gameLoop, 10); 
 
   }
 
@@ -104,11 +105,10 @@
 
 
   tetris.update = function(mod) {
-    console.log("tick fired");
-    console.log("update currentBlock position");
     var currentR = currentBlock.getRotationDeg();
+
     if(tetris.testForValidMove(0, 19, currentR)) {
-      tetris.moveBlock(0,19,true);
+      tetris.moveBlock(0,19, true);
     } else {
       tetris.killBlock();
     }
@@ -125,14 +125,13 @@
 
     if(gameInterval)
       clearInterval(gameInterval);
-    game.data.speed  = 1;
+    game.data.speed = 1;
     game.data.pause = false;
     layer.removeChildren();
     layer.draw();
     tetris.setScore(0);
     tetris.createBlock();
 
-    gameInterval = setInterval(tetris.gameLoop, 10); 
     return;
 
   }
@@ -150,7 +149,9 @@
     }
 
     // Make currentBlock part of the deadBlocks
-    deadBlocks.add(currentBlock);
+    tetris.convertToDeadBlocks();
+
+    currentBlock.destroy();
     layer.draw();
     
     // Check for Complete Lines
@@ -162,7 +163,6 @@
     return;
     
   }
-
 
 
   // Spawn a block set it as main piece
@@ -243,13 +243,11 @@
           if (blockHeight < 19 + (rowIndex * 19))
             blockHeight = 19 + (rowIndex * 19);
 
-
         }
 
       });
 
     });
-
 
     blockPiece.setSize(blockWidth, blockHeight);
 
@@ -261,10 +259,25 @@
 
   }
 
+  tetris.convertToDeadBlocks = function() {
+
+    // Add pixels from currentBlock to deadBlocks group
+    var pixels = currentBlock.getChildren();
+    pixels.forEach(function(v, i, a){
+
+      deadBlocks.add(v.clone({ x: v.getAbsolutePosition().x , y: v.getAbsolutePosition().y, rotationDeg: currentBlock.getRotationDeg() }));
+
+    });
+
+  }
 
   tetris.checkLines = function() {
 
     console.log("checking for completed lines");
+    oldBlocks = deadBlocks.getChildren();
+    oldBlocks.forEach(function(v,i,a){
+
+    });
 
   }
 
@@ -314,6 +327,7 @@
 
 
     if(isValidMove) {
+//      console.log("check for collisions with deadblocks");
       return true;
     } else if( !isValidMove && !xMove && !yMove ){
       xFix = 0;
@@ -331,6 +345,7 @@
 
       // Breaking bottom bounds?
       if((yDest + currHeight) >= BottomBounds) { 
+        console.log("broke the bottom");
         yFix = -((yDest + currHeight) - BottomBounds);
       }
 
@@ -349,10 +364,10 @@
   // Move Block
   tetris.moveBlock = function(xD,yD, force) {
 
-    force ? force : false;
     var currentR = currentBlock.getRotationDeg();
+    force ? force = force : force = false;
 
-    if(force) 
+    if(force)  // Use force when you've already tested
       currentBlock.setPosition( currentBlock.attrs.x + xD, currentBlock.attrs.y + yD );
     else if(tetris.testForValidMove(xD, yD, currentR)) {
       currentBlock.setPosition( currentBlock.attrs.x + xD, currentBlock.attrs.y + yD );
@@ -376,7 +391,7 @@
     currentR = currentBlock.getRotationDeg();
     if(tetris.testForValidMove(0, 0, targetR)){
       currentBlock.setRotationDeg(targetR);
-      layer.draw();
+      stage.draw();
     }
 
     return;
@@ -386,7 +401,7 @@
   tetris.resolveRotate = function(xD, yD, degree) {
       currentBlock.setRotationDeg(degree);
       currentBlock.setPosition(currentBlock.attrs.x + xD, currentBlock.attrs.y + yD);
-      layer.draw();
+      stage.draw();
   }
 
   tetris.initHUD = function() {
@@ -455,9 +470,14 @@
   }
 
   tetris.util = function() {
-    deadBlocks.moveToTop();
-    console.log(deadBlocks);
-    console.log(currentBlock);
+    oldBlocks = deadBlocks.getChildren();
+
+    oldBlocks.forEach(function(v,i,a){
+
+      console.log("old block position:");
+      console.log(v.getPosition());
+
+    });
   }
 
   window.tetris = tetris;

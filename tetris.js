@@ -38,7 +38,7 @@
         "keys"          : "a",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!game.data.pause)
+          if(!game.data.pause || !game.data.gameover)
             tetris.moveBlock(-19,0);
         }
       },
@@ -46,7 +46,7 @@
         "keys"          : "s",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!game.data.pause)
+          if(!game.data.pause || !game.data.gameover)
             tetris.moveBlock(0,19);
         }
       },
@@ -54,7 +54,7 @@
         "keys"          : "d",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!game.data.pause)
+          if(!game.data.pause || !game.data.gameover)
             tetris.moveBlock(19,0);
         }
       },
@@ -62,7 +62,7 @@
         "keys"          : "space",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!game.data.pause)
+          if(!game.data.pause || !game.data.gameover)
             tetris.rotateBlock();
         }
       },
@@ -70,7 +70,18 @@
         "keys"          : "enter",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          tetris.pauseGame();
+          if(!game.data.gameover)
+            tetris.pauseGame();
+        }
+      },
+      {
+        "keys"          : "escape",
+        "is_exclusive"  : true,
+        "on_keydown"    : function() {
+          if(game.data.gameover) {
+            tetris.reset();
+            tetris.run();
+          }
         }
       }
     ];
@@ -114,9 +125,6 @@
     if(tetris.testForValidMove(0, 19, currentR)) {
       tetris.moveBlock(0,19, true);
     } else {
-      console.log("Killing Block");
-      console.log(currentBlock);
-      console.log(deadBlocksObj);
       tetris.killBlock();
       tetris.checkForGameOver();
     }
@@ -130,19 +138,40 @@
 
     if(deadBlocksObj[38]){
       console.log("game over sucker");
+      game.data.gameover = true;
       clearInterval(gameInterval);
-      gameOverText = new Kinetic.Text({
+      gameOver = new Kinetic.Group({
+        width: 200,
+        height: 120,
         x: game.data.width/2,
-        y: game.data.width/2,
+        y: game.data.height/2,
+        offset: {
+          x: 100,
+          y: 60
+        }
+      });
+      gameOverBox  = new Kinetic.Rect({
+        x: 0,
+        y: 0,
+        fill: '#00A299',
+        width: 200,
+        height: 120
+      });
+      gameOverText = new Kinetic.Text({
+        x: 6,
+        y: 42,
         text: "GAME OVER\n[ESC] TO RESTART",
-        fontSize: 30,
-        align: 'center'
-        
+        lineHeight: 1.3,
+        fontSize: 20,
+        fontFamily: "Helvetica",
+        fontStyle: "bold",
+        align: 'center',
+        fill: '#00D0C6'
       });
 
-      layer.add(gameOverText);
-      gameOverText.moveToTop();
-      gameOverText.draw();
+      gameOver.add(gameOverBox);
+      gameOver.add(gameOverText);
+      layer.add(gameOver);
       layer.draw();
     }
 
@@ -156,10 +185,18 @@
       clearInterval(gameInterval);
     game.data.speed = 1;
     game.data.pause = false;
+    game.data.gameover = false;
     layer.removeChildren();
     layer.draw();
     tetris.setScore(0);
     tetris.createBlock();
+
+    if(deadBlocksObj)
+      deadBlocksObj = {};
+
+    if(deadBlocks)
+      deadBlocks.destroy();
+
 
     return;
 
@@ -372,6 +409,9 @@
 
   tetris.removeLine = function(y){
 
+    console.log("before remove line");
+    tetris.util();
+
     oldBlocks = deadBlocks.getChildren();
     oldBlocks.forEach(function(v,i,a){
 
@@ -385,7 +425,7 @@
 
     layer.draw();
     tetris.setScore(game.data.score + 1);
-    console.log("in removing line:");
+    console.log("after removing line:");
     console.log(deadBlocksObj);
     deadBlocksObj = tetris.calculateDeadBlocksObj();
 
@@ -500,14 +540,6 @@
       return didCollide;
 
     pixelR = currentBlock.getRotationDeg();
-
-    
-    console.log("----");
-    console.log("----");
-    console.log("Current Block Loc: x: " + currentBlock.getX() + " y: " + currentBlock.getY());
-    console.log("Move By: x: " + xMove + " y: " + yMove);
-    console.log("degree: " + degree);
-    console.log("current R: " + pixelR);
 
     pixels = currentBlock.getChildren();
     pixels.forEach(function(v,i,a){
@@ -652,7 +684,8 @@
   tetris.util = function() {
     console.log("deadBlocksObj:");
     console.log(deadBlocksObj);
-    console.log(currentBlock);
+    console.log("deadBlocks");
+    console.log(deadBlocks);
   }
 
   window.tetris = tetris;

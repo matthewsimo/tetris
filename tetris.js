@@ -4,6 +4,9 @@
   var game = {};
   var isMoveHappening = false;
 
+  var darkColor = '#00A299';
+  var lightColor = '#00D0C6';
+
   var stage, layer, currentBlock, deadBlocks, deadBlocksObj, layerHUD, scoreText, gameInterval, gameTimerThen, gameTimerNow, pauseGameNotification, gameOverGroup;
 
   // Blue prints for all the block options
@@ -153,7 +156,7 @@
       gameOverBox  = new Kinetic.Rect({
         x: 0,
         y: 0,
-        fill: '#00A299',
+        fill: darkColor,
         width: 200,
         height: 120
       });
@@ -166,7 +169,7 @@
         fontFamily: "Helvetica",
         fontStyle: "bold",
         align: 'center',
-        fill: '#00D0C6'
+        fill: lightColor
       });
 
       gameOverGroup.add(gameOverBox);
@@ -262,8 +265,8 @@
             y: rowIndex * 19,
             width: 19,
             height: 19,
-            fill: '#00A299',
-            stroke: '#00D0C6',
+            fill: darkColor,
+            stroke: lightColor,
             strokeWidth: 1,
             opacity: 1
           });
@@ -424,8 +427,8 @@
           y: y,
           width: 19,
           height: 19,
-          fill: '#00A299',
-          stroke: '#00D0C6',
+          fill: darkColor,
+          stroke: lightColor,
           strokeWidth: 1,
           opacity: 1
         });
@@ -603,7 +606,7 @@
     layerHUD = new Kinetic.Layer();
     var container = new Kinetic.Line({
       points: [ 200, 40, 200, 440, 400, 440, 400, 40 ],
-      stroke: '#00A299',
+      stroke: darkColor,
       strokeWidth: 1
     });
 
@@ -617,7 +620,7 @@
       text: 'Score:',
       fontSize: 20,
       fontFamily: "Helvetica",
-      fill: '#00A299'
+      fill: darkColor
     });
     scoreText = new Kinetic.Text({
       x: 0,
@@ -625,7 +628,7 @@
       text: '0',
       fontSize: 20,
       fontFamily: "Helvetica",
-      fill: '#00A299'
+      fill: darkColor
     });
 
     scoreGroup.add(scoreTitle);
@@ -679,7 +682,7 @@
       pauseBox  = new Kinetic.Rect({
         x: 0,
         y: 0,
-        fill: '#00A299',
+        fill: darkColor,
         width: 200,
         height: 120
       });
@@ -692,7 +695,7 @@
         fontFamily: "Helvetica",
         fontStyle: "bold",
         align: 'center',
-        fill: '#00D0C6'
+        fill: lightColor
       });
 
       pauseGameNotification.add(pauseBox);

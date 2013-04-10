@@ -1,0 +1,9 @@
+{
+  "name": "Tetris.js",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "webserver": "1.1.x"
+  },
+  "license": "WTFBBQ"
+}

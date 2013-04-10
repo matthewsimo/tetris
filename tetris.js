@@ -605,7 +605,7 @@
 
     layerHUD = new Kinetic.Layer();
     var container = new Kinetic.Line({
-      points: [ 200, 40, 200, 440, 400, 440, 400, 40 ],
+      points: [ 200, 40, 200, 442, 400, 442, 400, 40 ],
       stroke: darkColor,
       strokeWidth: 1
     });

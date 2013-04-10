@@ -6,13 +6,14 @@
 
   var stage, layer, currentBlock, deadBlocks, deadBlocksObj, layerHUD, scoreText, gameInterval, gameTimerThen, gameTimerNow, pauseGameNotification, gameOverGroup;
 
+  // Blue prints for all the block options
+  var blueprints = [ [[ 1, 1, 1, 1 ],[ 0, 0, 0, 0 ]], [[ 1, 1, 1, 0 ],[ 0, 0, 1, 0 ]], [[ 1, 1, 1, 0 ],[ 1, 0, 0, 0 ]], [[ 1, 1, 1, 0 ],[ 0, 1, 0, 0 ]],[[ 1, 1, 0, 0 ],[ 0, 1, 1, 0 ]],[[ 0, 1, 1, 0 ],[ 1, 1, 0, 0 ]],[[ 1, 1, 0, 0 ],[ 1, 1, 0, 0 ]] ];
+
 
   // Init canvas, add to page
   // Set controls key binds
   // Left: [a], Right: [d], Down: [s], Rotate: [space]
   tetris.init = function() {
-
-    console.log("Initializing");
 
     stage = new Kinetic.Stage({
       container: 'game',
@@ -39,7 +40,7 @@
         "keys"          : "a",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!game.data.pause || !game.data.gameover)
+          if(!game.data.pause && !game.data.gameover)
             tetris.moveBlock(-19,0);
         }
       },
@@ -47,7 +48,7 @@
         "keys"          : "s",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!game.data.pause || !game.data.gameover)
+          if(!game.data.pause && !game.data.gameover)
             tetris.moveBlock(0,19);
         }
       },
@@ -55,7 +56,7 @@
         "keys"          : "d",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!game.data.pause || !game.data.gameover)
+          if(!game.data.pause && !game.data.gameover)
             tetris.moveBlock(19,0);
         }
       },
@@ -63,7 +64,7 @@
         "keys"          : "space",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!game.data.pause || !game.data.gameover)
+          if(!game.data.pause && !game.data.gameover)
             tetris.rotateBlock();
         }
       },
@@ -97,8 +98,6 @@
   // Begin game
   tetris.run = function() {
 
-    console.log("Running Tetris");
-
     then = Date.now();
     gameInterval = setInterval(tetris.gameLoop, 10); 
 
@@ -111,7 +110,7 @@
       now = Date.now();
       var delta = now - then;
 
-      if( delta >= 1000 - game.data.speed){
+      if( delta >= (1000 - game.data.speed)){
         tetris.update(delta);
         then = now;
       }
@@ -138,7 +137,7 @@
   tetris.checkForGameOver = function() {
 
     if(deadBlocksObj[38]){
-      console.log("game over sucker");
+      if(console.log) console.log("game over sucker");
       game.data.gameover = true;
       clearInterval(gameInterval);
       gameOverGroup = new Kinetic.Group({
@@ -180,8 +179,6 @@
 
   tetris.reset = function() {
     
-    console.log("Resetting Game");
-
     if(gameInterval)
       clearInterval(gameInterval);
 
@@ -199,15 +196,13 @@
     tetris.createBlock();
 
     if(deadBlocksObj) {
+      layer.add(deadBlocks);
       deadBlocksObj = {};
       tetris.rebuildDeadBlocks();
     }
 
     if(gameOverGroup)
       gameOverGroup.destroy();
-
-    layer.draw();
-    return;
 
   }
 
@@ -228,7 +223,6 @@
     tetris.convertToDeadBlocks();
 
     currentBlock.destroy();
-    layer.draw();
     
     // Check for Complete Lines
     tetris.checkLines();
@@ -243,45 +237,6 @@
 
   // Spawn a block set it as main piece
   tetris.createBlock = function() {
-
-    // Blue prints for all the block options
-    blueprints = [
-      [
-        [ 1, 1, 1, 1 ],
-        [ 0, 0, 0, 0 ]
-      ],
-
-      [
-        [ 1, 1, 1, 0 ],
-        [ 0, 0, 1, 0 ]
-      ],
-
-      [
-        [ 1, 1, 1, 0 ],
-        [ 1, 0, 0, 0 ]
-      ],
-
-      [
-        [ 1, 1, 1, 0 ],
-        [ 0, 1, 0, 0 ]
-      ],
-
-      [
-        [ 1, 1, 0, 0 ],
-        [ 0, 1, 1, 0 ]
-      ],
-
-      [
-        [ 0, 1, 1, 0 ],
-        [ 1, 1, 0, 0 ]
-      ],
-
-      [
-        [ 1, 1, 0, 0 ],
-        [ 1, 1, 0, 0 ]
-      ]
-
-    ];
 
     blueprint = blueprints[Math.floor(Math.random()*blueprints.length)];
 
@@ -366,7 +321,6 @@
 
   tetris.convertToDeadBlocks = function() {
 
-
     // Add pixels from currentBlock to deadBlocks group
     var pixels = currentBlock.getChildren();
     pixels.forEach(function(v, i, a){
@@ -385,6 +339,8 @@
       deadBlocksObj[''+ deadCoords.y].push(''+ deadCoords.x);
 
     });
+
+    tetris.util();
 
   }
 
@@ -414,11 +370,6 @@
 
   tetris.removeLines = function(y){
 
-
-    console.log("removing: ");
-    console.log(y);
-
-    console.log(deadBlocksObj);
     tetris.calculateDeadBlocksObj(y);
 
     tetris.rebuildDeadBlocks();
@@ -461,9 +412,6 @@
   }
 
   tetris.rebuildDeadBlocks = function() {
-
-    
-    console.log(deadBlocksObj);
 
     deadBlocks.removeChildren();
 
@@ -690,11 +638,19 @@
   }
 
 
+  tetris.setSpeed = function(speed) {
+
+    game.data.speed = 100 + speed;
+
+  }
+
+
   tetris.setScore = function(score) {
 
     game.data.score = score;
     scoreText.setText(score);
     layerHUD.draw();
+    tetris.setSpeed(score);
 
   }
 
@@ -748,16 +704,14 @@
       game.data.pause = true;
     }
 
-    console.log("pause game " + game.data.pause);
-
   }
 
   tetris.util = function() {
-    console.log("deadBlocksObj:");
-    console.log(deadBlocksObj);
-
-    console.log("deadBlocks:");
-    console.log(deadBlocks);
+//    console.log("deadBlocksObj:");
+//    console.log(deadBlocksObj);
+//
+//    console.log("deadBlocks:");
+//    console.log(deadBlocks);
   }
 
   window.tetris = tetris;

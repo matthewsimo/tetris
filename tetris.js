@@ -643,7 +643,7 @@
 
   tetris.setSpeed = function(speed) {
 
-    game.data.speed = 100 + speed;
+    game.data.speed = 100 + (speed * 10);
 
   }
 

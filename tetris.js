@@ -4,7 +4,7 @@
   var game = {};
   var isMoveHappening = false;
 
-  var stage, layer, currentBlock, deadBlocks, deadBlocksObj, layerHUD, scoreText, gameInterval, gameTimerThen, gameTimerNow;
+  var stage, layer, currentBlock, deadBlocks, deadBlocksObj, layerHUD, scoreText, gameInterval, gameTimerThen, gameTimerNow, pauseGameNotification, gameOverGroup;
 
 
   // Init canvas, add to page
@@ -30,6 +30,7 @@
     game.data.score  = 0;
     game.data.speed  = 100;
     game.data.pause = false;
+    game.data.gameover = false;
     game.data.width  = stage.attrs.width;
     game.data.height = stage.attrs.height;
 
@@ -140,7 +141,7 @@
       console.log("game over sucker");
       game.data.gameover = true;
       clearInterval(gameInterval);
-      gameOver = new Kinetic.Group({
+      gameOverGroup = new Kinetic.Group({
         width: 200,
         height: 120,
         x: game.data.width/2,
@@ -169,9 +170,9 @@
         fill: '#00D0C6'
       });
 
-      gameOver.add(gameOverBox);
-      gameOver.add(gameOverText);
-      layer.add(gameOver);
+      gameOverGroup.add(gameOverBox);
+      gameOverGroup.add(gameOverText);
+      layer.add(gameOverGroup);
       layer.draw();
     }
 
@@ -183,21 +184,29 @@
 
     if(gameInterval)
       clearInterval(gameInterval);
-    game.data.speed = 1;
+
+    game.data = {};
+    game.data.score  = 0;
+    game.data.speed  = 100;
     game.data.pause = false;
     game.data.gameover = false;
+    game.data.width  = stage.attrs.width;
+    game.data.height = stage.attrs.height;
+
     layer.removeChildren();
-    layer.draw();
+
     tetris.setScore(0);
     tetris.createBlock();
 
-    if(deadBlocksObj)
+    if(deadBlocksObj) {
       deadBlocksObj = {};
+      tetris.rebuildDeadBlocks();
+    }
 
-    if(deadBlocks)
-      deadBlocks.destroy();
+    if(gameOverGroup)
+      gameOverGroup.destroy();
 
-
+    layer.draw();
     return;
 
   }
@@ -398,60 +407,85 @@
     }
 
     if(completedLines.length !== 0){
-      // Process through each completed line and remove it
-      console.log("we have completed lines.");
-      completedLines.forEach(function(v){
-        tetris.removeLine(v);
-      });
+      tetris.removeLines(completedLines);
     }
 
   }
 
-  tetris.removeLine = function(y){
+  tetris.removeLines = function(y){
 
-    console.log("before remove line");
-    tetris.util();
 
-    oldBlocks = deadBlocks.getChildren();
-    oldBlocks.forEach(function(v,i,a){
+    console.log("removing: ");
+    console.log(y);
 
-      if(v.getY() == y) { // We have a matching y, remove that sucker
-        v.destroy();
-      } else if ( v.getY() < y ) { // This block is above the line we're removing, move it down
-        v.setY(v.getY() + 19);
-      } 
-
-    });
-
-    layer.draw();
-    tetris.setScore(game.data.score + 1);
-    console.log("after removing line:");
     console.log(deadBlocksObj);
-    deadBlocksObj = tetris.calculateDeadBlocksObj();
+    tetris.calculateDeadBlocksObj(y);
 
+    tetris.rebuildDeadBlocks();
+
+    tetris.setScore(game.data.score + y.length);
+    layer.draw();
 
   }
 
 
-  tetris.calculateDeadBlocksObj = function() {
+  tetris.calculateDeadBlocksObj = function(y) {
 
-    deadBlocksObj = {};
     newDeadBlocksObj = {};
 
-    var oldBlocks = deadBlocks.getChildren();
-    oldBlocks.forEach(function(v, i, a){
+    // Iterate over the remaining deadBlockObj keys
+    $.each(deadBlocksObj, function(i, v){
 
-      deadCoords = {};
-      deadCoords.x = v.getAbsolutePosition().x;
-      deadCoords.y = v.getAbsolutePosition().y;
+      // if this key is less that the one we removed (i.e. above)
+      if( parseInt(i) < parseInt( y.sort()[0] ) ) {
 
-      if(!deadBlocksObj['' + deadCoords.y])
-        deadBlocksObj['' + deadCoords.y] = [];
+        // copy it to the 'next' key depending on the number of rows we're removing
+        newDeadBlocksObj['' + (parseInt(i) + (y.length * 19) )] = deadBlocksObj['' + parseInt(i)];
 
-      deadBlocksObj[''+ deadCoords.y].push(''+ deadCoords.x);
+      // if this key is greater than the one we're removing (i.e. below)
+      } else if (parseInt(i) > parseInt( y.sort().reverse()[0] )) {
+
+        // copy it over to the same key
+        newDeadBlocksObj['' + (parseInt(i))] = deadBlocksObj['' + parseInt(i)];
+
+      // If the key is the one we are removing, don't move it over to new obj
+      } else {
+      }
+
     });
+
+    // Reset our Obj  & set to the one we just rebuilt
+    deadBlocksObj = {};
+    deadBlocksObj = newDeadBlocksObj;
     
-    return newDeadBlocksObj;
+  }
+
+  tetris.rebuildDeadBlocks = function() {
+
+    
+    console.log(deadBlocksObj);
+
+    deadBlocks.removeChildren();
+
+    $.each(deadBlocksObj, function(y, xArray){
+
+      xArray.forEach(function(x,i,a){
+        
+        var newDeadBlock = new Kinetic.Rect({
+          x: x,
+          y: y,
+          width: 19,
+          height: 19,
+          fill: '#00A299',
+          stroke: '#00D0C6',
+          strokeWidth: 1,
+          opacity: 1
+        });
+        deadBlocks.add(newDeadBlock);
+
+      });
+
+    });
 
   }
 
@@ -661,18 +695,55 @@
     game.data.score = score;
     scoreText.setText(score);
     layerHUD.draw();
-    
 
   }
 
+
   tetris.pauseGame = function(){
   
+
     // Game is already paused, restart interval
     if(game.data.pause) {
+
+      pauseGameNotification.destroy();
       gameInterval = setInterval(tetris.gameLoop, 10);
       game.data.pause = false;
-    }
-    else {
+
+    } else {
+      pauseGameNotification = new Kinetic.Group({
+        width: 200,
+        height: 120,
+        x: game.data.width/2,
+        y: game.data.height/2,
+        offset: {
+          x: 100,
+          y: 60
+        }
+      });
+      pauseBox  = new Kinetic.Rect({
+        x: 0,
+        y: 0,
+        fill: '#00A299',
+        width: 200,
+        height: 120
+      });
+      pauseText = new Kinetic.Text({
+        x: 6,
+        y: 42,
+        text: "GAME PAUSED\n[ENTER] TO RESUME",
+        lineHeight: 1.3,
+        fontSize: 18,
+        fontFamily: "Helvetica",
+        fontStyle: "bold",
+        align: 'center',
+        fill: '#00D0C6'
+      });
+
+      pauseGameNotification.add(pauseBox);
+      pauseGameNotification.add(pauseText);
+
+      layer.add(pauseGameNotification);
+      layer.draw();
       clearInterval(gameInterval);
       game.data.pause = true;
     }
@@ -684,7 +755,8 @@
   tetris.util = function() {
     console.log("deadBlocksObj:");
     console.log(deadBlocksObj);
-    console.log("deadBlocks");
+
+    console.log("deadBlocks:");
     console.log(deadBlocks);
   }
 

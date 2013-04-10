@@ -11,4 +11,4 @@ Tetris on the canvas.
 - [enter]: toggle pause game
 - [escape]: restarts on game over
 
-If you need a web server to load the game locally, `$ npm install`.
+You'll need a web server to load the game locally, `$ npm install`, run it with `$ node node_modules/webserver/webserver.js`.

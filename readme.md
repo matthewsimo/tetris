@@ -7,7 +7,7 @@ Tetris on the canvas.
 - [a]: move left
 - [s]: move down
 - [d]: move right
-- [space]: rotate current block
+- [w]: rotate current block
 - [enter]: toggle pause game
 - [escape]: restarts on game over
 

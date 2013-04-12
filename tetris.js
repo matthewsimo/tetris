@@ -64,7 +64,7 @@
         }
       },
       {
-        "keys"          : "space",
+        "keys"          : "w",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
           if(!game.data.pause && !game.data.gameover)
@@ -75,7 +75,7 @@
         "keys"          : "enter",
         "is_exclusive"  : true,
         "on_keydown"    : function() {
-          if(!game.data.gameover)
+          if(!game.data.gameover && game.data)
             tetris.pauseGame();
         }
       },

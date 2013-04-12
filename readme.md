@@ -12,3 +12,5 @@ Tetris on the canvas.
 - [escape]: restarts on game over
 
 You'll need a web server to load the game locally, `$ npm install`, run it with `$ node node_modules/webserver/webserver.js`.
+
+Once you're up and running locally, punch in the konami code to initialize game. Or run `tetris.init();` in the console..

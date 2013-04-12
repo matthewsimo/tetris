@@ -180,6 +180,7 @@
 
   }
 
+
   tetris.reset = function() {
     
     if(gameInterval)
@@ -293,6 +294,7 @@
 
   }
 
+
   tetris.correctForRotation = function(rotation){
 
       var cX = 0;
@@ -347,6 +349,7 @@
 
   }
 
+
   tetris.checkLines = function() {
 
     var completedLines = [];
@@ -370,6 +373,7 @@
     }
 
   }
+
 
   tetris.removeLines = function(y){
 
@@ -413,6 +417,7 @@
     deadBlocksObj = newDeadBlocksObj;
     
   }
+
 
   tetris.rebuildDeadBlocks = function() {
 
@@ -516,6 +521,7 @@
 
   }
 
+
   // Check for collisions with dead blocks, returns BOOL
   tetris.checkForDeadBlockCollision = function(xMove, yMove, degree){
 
@@ -554,7 +560,6 @@
   }
 
 
-
   // Input Control logic
   //
 
@@ -575,6 +580,7 @@
     return;
   }
 
+
   // Rotate Block
   tetris.rotateBlock = function() {
     var currentR = currentBlock.getRotationDeg();
@@ -594,12 +600,14 @@
     return;
   }
 
+
   // Resolve Rotates that break bounds
   tetris.resolveRotate = function(xD, yD, degree) {
       currentBlock.setRotationDeg(degree);
       currentBlock.setPosition(currentBlock.attrs.x + xD, currentBlock.attrs.y + yD);
       stage.draw();
   }
+
 
   tetris.initHUD = function() {
 
@@ -641,6 +649,8 @@
   }
 
 
+  // Util game functions
+  //
   tetris.setSpeed = function(speed) {
 
     game.data.speed = 100 + (speed * 10);
@@ -660,7 +670,6 @@
 
   tetris.pauseGame = function(){
   
-
     // Game is already paused, restart interval
     if(game.data.pause) {
 
@@ -708,6 +717,7 @@
     }
 
   }
+
 
   tetris.util = function() {
 //    console.log("deadBlocksObj:");
